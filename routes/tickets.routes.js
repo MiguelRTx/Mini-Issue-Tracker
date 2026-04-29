@@ -15,7 +15,7 @@ router.post('/:id/edit', tickets.editPost);
 router.post('/:id/delete', tickets.deletePost);
 router.post('/:id/status', tickets.changeStatusPost);
 
-// API endpoint para drag-and-drop del tablero Kanban
+
 router.post('/:id/status-api', tickets.changeStatusApi);
 
 module.exports = router;
