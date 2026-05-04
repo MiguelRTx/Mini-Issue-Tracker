@@ -1,0 +1,18 @@
+<div class="ticket-card" data-ticket-id="<%= ticket.id %>">
+    <a href="/projects/<%= pid %>/tickets/<%= ticket.id %>" class="ticket-link">
+        <div class="ticket-id">#<%= ticket.id %></div>
+        <h3 class="ticket-title"><%= ticket.titulo %></h3>
+        <p class="ticket-desc"><%= ticket.descripcion.length > 80 ? ticket.descripcion.substring(0, 80) + '...' : ticket.descripcion %></p>
+        <div class="ticket-footer">
+            <% if (ticket.assignee) { %>
+                <span class="ticket-assignee" title="<%= ticket.assignee.nombre %>">
+                    <span class="avatar-sm"><%= ticket.assignee.nombre.charAt(0).toUpperCase() %></span>
+                    <span class="assignee-name"><%= ticket.assignee.nombre %></span>
+                </span>
+            <% } else { %>
+                <span class="ticket-unassigned">Sin asignar</span>
+            <% } %>
+            <span class="ticket-date"><%= new Date(ticket.createdAt).toLocaleDateString('es-ES') %></span>
+        </div>
+    </a>
+</div>

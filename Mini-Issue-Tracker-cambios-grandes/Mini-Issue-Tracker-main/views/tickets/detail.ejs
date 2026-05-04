@@ -1,0 +1,110 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="page-container">
+    <div class="page-header">
+        <div>
+            <a href="/projects/<%= project.id %>/tickets" class="back-link">Tablero</a>
+            <h1 class="page-title">Detalle del Ticket</h1>
+        </div>
+        <div class="header-actions">
+            <a href="/projects/<%= project.id %>/tickets/<%= ticket.id %>/edit" class="btn btn-outline">Editar</a>
+            <form action="/projects/<%= project.id %>/tickets/<%= ticket.id %>/delete" method="POST"
+                onsubmit="return confirm('Eliminar este ticket?')">
+                <button type="submit" class="btn btn-danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
+
+    <% if (error) { %>
+        <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="detail-grid">
+        <div class="detail-main">
+            <div class="ticket-detail-card">
+                <div class="ticket-detail-header">
+                    <span class="ticket-id-badge">#<%= ticket.id %></span>
+                    <%
+                        const estadoLabel = { pendiente: 'Pendiente', en_progreso: 'En Progreso', completado: 'Completado' };
+                        const estadoClass = { pendiente: 'estado-pendiente', en_progreso: 'estado-en_progreso', completado: 'estado-completado' };
+                    %>
+                    <span class="estado-badge <%= estadoClass[ticket.estado] %>"><%= estadoLabel[ticket.estado] %></span>
+                </div>
+                <h2 class="ticket-detail-title"><%= ticket.titulo %></h2>
+                <div class="ticket-detail-desc">
+                    <p><%= ticket.descripcion %></p>
+                </div>
+                <div class="ticket-meta-grid">
+                    <div class="meta-block">
+                        <span class="meta-label">Creado por</span>
+                        <span class="meta-val"><%= ticket.creator ? ticket.creator.nombre : 'Desconocido' %></span>
+                    </div>
+                    <div class="meta-block">
+                        <span class="meta-label">Asignado a</span>
+                        <span class="meta-val">
+                            <% if (ticket.assignee) { %>
+                                <span class="avatar-sm"><%= ticket.assignee.nombre.charAt(0).toUpperCase() %></span>
+                                <%= ticket.assignee.nombre %>
+                            <% } else { %>
+                                <span class="text-muted">Sin asignar</span>
+                            <% } %>
+                        </span>
+                    </div>
+                    <div class="meta-block">
+                        <span class="meta-label">Fecha de creacion</span>
+                        <span class="meta-val"><%= new Date(ticket.createdAt).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+                    </div>
+                    <div class="meta-block">
+                        <span class="meta-label">Proyecto</span>
+                        <span class="meta-val"><%= project.nombre %></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-sidebar">
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">Cambiar Estado</h3>
+                <% if (validNext.length > 0) { %>
+                    <form action="/projects/<%= project.id %>/tickets/<%= ticket.id %>/status" method="POST">
+                        <div class="form-group">
+                            <select name="estado" id="estado-select" class="form-input form-select">
+                                <% validNext.forEach(estado => { %>
+                                    <option value="<%= estado %>">
+                                        <%= { pendiente: 'Pendiente', en_progreso: 'En Progreso', completado: 'Completado' }[estado] %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">Mover ticket</button>
+                    </form>
+                <% } else { %>
+                    <p class="text-muted" style="font-size:.85rem;">No hay transiciones disponibles desde el estado actual.</p>
+                <% } %>
+            </div>
+
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">Reasignar</h3>
+                <form action="/projects/<%= project.id %>/tickets/<%= ticket.id %>/edit" method="POST">
+                    <input type="hidden" name="titulo" value="<%= ticket.titulo %>">
+                    <input type="hidden" name="descripcion" value="<%= ticket.descripcion %>">
+                    <div class="form-group">
+                        <select name="assigned_to" class="form-input form-select">
+                            <option value="">-- Sin asignar --</option>
+                            <% members.forEach(m => { %>
+                                <option value="<%= m.id %>" <%= ticket.assigned_to == m.id ? 'selected' : '' %>>
+                                    <%= m.nombre %>
+                                </option>
+                            <% }) %>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary btn-full">Actualizar asignado</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
