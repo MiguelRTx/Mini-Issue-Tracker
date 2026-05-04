@@ -1,0 +1,130 @@
+<%- include('../partials/header') %>
+<%- include('../partials/navbar') %>
+
+<div class="board-container">
+    <div class="board-header">
+        <div>
+            <a href="/projects/<%= project.id %>" class="back-link"><%= project.nombre %></a>
+            <h1 class="page-title">Tablero de Trabajo</h1>
+        </div>
+        <a href="/projects/<%= project.id %>/tickets/new" class="btn btn-primary">+ Nuevo Ticket</a>
+    </div>
+
+    <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-error" style="margin-bottom:1rem;"><%= error %></div>
+    <% } %>
+
+    <div class="kanban-board" id="kanban-board">
+
+        <div class="kanban-column" id="col-pendiente" data-estado="pendiente">
+            <div class="column-header column-pendiente">
+                <span class="column-indicator"></span>
+                <span class="column-title">Pendiente</span>
+                <span class="column-count badge-count"><%= grouped.pendiente.length %></span>
+            </div>
+            <div class="column-cards" id="cards-pendiente" data-estado="pendiente">
+                <% grouped.pendiente.forEach(ticket => { %>
+                    <%- include('./ticket-card', { ticket, pid: project.id }) %>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="kanban-column" id="col-en_progreso" data-estado="en_progreso">
+            <div class="column-header column-en_progreso">
+                <span class="column-indicator"></span>
+                <span class="column-title">En Progreso</span>
+                <span class="column-count badge-count"><%= grouped.en_progreso.length %></span>
+            </div>
+            <div class="column-cards" id="cards-en_progreso" data-estado="en_progreso">
+                <% grouped.en_progreso.forEach(ticket => { %>
+                    <%- include('./ticket-card', { ticket, pid: project.id }) %>
+                <% }) %>
+            </div>
+        </div>
+
+        <div class="kanban-column" id="col-completado" data-estado="completado">
+            <div class="column-header column-completado">
+                <span class="column-indicator"></span>
+                <span class="column-title">Completado</span>
+                <span class="column-count badge-count"><%= grouped.completado.length %></span>
+            </div>
+            <div class="column-cards" id="cards-completado" data-estado="completado">
+                <% grouped.completado.forEach(ticket => { %>
+                    <%- include('./ticket-card', { ticket, pid: project.id }) %>
+                <% }) %>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+const pid = '<%= project.id %>';
+
+const VALID_TRANSITIONS = {
+    'pendiente':   ['en_progreso'],
+    'en_progreso': ['pendiente', 'completado'],
+    'completado':  ['en_progreso']
+};
+
+function initKanban() {
+    const columns = document.querySelectorAll('.column-cards');
+    columns.forEach(col => {
+        Sortable.create(col, {
+            group: 'kanban',
+            animation: 180,
+            ghostClass: 'ticket-ghost',
+            chosenClass: 'ticket-chosen',
+            dragClass: 'ticket-drag',
+            onEnd: async function(evt) {
+                const ticketId = evt.item.dataset.ticketId;
+                const fromEstado = evt.from.dataset.estado;
+                const toEstado = evt.to.dataset.estado;
+
+                if (fromEstado === toEstado) return;
+
+                const allowed = VALID_TRANSITIONS[fromEstado] || [];
+                if (!allowed.includes(toEstado)) {
+                    alert('Transicion no permitida: de "' + fromEstado + '" a "' + toEstado + '"');
+                    evt.from.appendChild(evt.item);
+                    updateCounts();
+                    return;
+                }
+
+                try {
+                    const res = await fetch('/projects/' + pid + '/tickets/' + ticketId + '/status-api', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ estado: toEstado })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                        alert(data.error || 'Error al cambiar el estado');
+                        evt.from.appendChild(evt.item);
+                    }
+                    updateCounts();
+                } catch (err) {
+                    alert('Error de conexion');
+                    evt.from.appendChild(evt.item);
+                    updateCounts();
+                }
+            }
+        });
+    });
+}
+
+function updateCounts() {
+    document.querySelectorAll('.column-cards').forEach(col => {
+        const estado = col.dataset.estado;
+        const count = col.querySelectorAll('.ticket-card').length;
+        const badge = document.querySelector('#col-' + estado + ' .badge-count');
+        if (badge) badge.textContent = count;
+    });
+}
+
+initKanban();
+</script>
+
+</body>
+</html>

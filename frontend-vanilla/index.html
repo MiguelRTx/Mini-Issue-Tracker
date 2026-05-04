@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Issue Tracker</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar" id="navbar" style="display: none;">
+        <div class="container navbar-container">
+            <a href="#" class="navbar-brand" onclick="app.navigate('projects')">
+                <div class="logo-icon">📋</div>
+                Issue Tracker
+            </a>
+            <div class="navbar-nav">
+                <span class="user-greeting" id="userGreeting"></span>
+                <a href="#" class="nav-link" onclick="app.navigate('projects')">Mis Proyectos</a>
+                <button class="btn btn-secondary btn-sm" onclick="app.logout()">Salir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content" id="app-content">
+    </main>
+
+    <div id="toast-container" class="toast-container"></div>
+
+    
+    <template id="tpl-login">
+        <div class="auth-container">
+            <div class="auth-card card glass">
+                <div class="auth-header">
+                    <div class="auth-icon">🔐</div>
+                    <h1>Iniciar Sesión</h1>
+                    <p>Accede a tus proyectos e incidencias</p>
+                </div>
+                <div id="login-error" class="alert alert-danger hidden"></div>
+                <form id="form-login" onsubmit="app.handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" required placeholder="••••••••">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="btn-login">Ingresar</button>
+                </form>
+                <div class="auth-footer">
+                    ¿No tienes cuenta? <a href="#" onclick="app.navigate('register')">Regístrate aquí</a>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-register">
+        <div class="auth-container">
+            <div class="auth-card card glass">
+                <div class="auth-header">
+                    <div class="auth-icon">✨</div>
+                    <h1>Crear Cuenta</h1>
+                    <p>Únete y comienza a gestionar tus proyectos</p>
+                </div>
+                <div id="register-error" class="alert alert-danger hidden"></div>
+                <form id="form-register" onsubmit="app.handleRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" name="nombre" required placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email" required placeholder="tu@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" name="password" required placeholder="Mínimo 6 caracteres">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="btn-register">Registrarse</button>
+                </form>
+                <div class="auth-footer">
+                    ¿Ya tienes cuenta? <a href="#" onclick="app.navigate('login')">Inicia sesión</a>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-projects">
+        <div class="container py-4">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Proyectos</h1>
+                    <p class="page-subtitle">Proyectos a los que perteneces</p>
+                </div>
+                <button class="btn btn-primary" onclick="app.navigate('project-form')">+ Nuevo Proyecto</button>
+            </div>
+            <div id="projects-loading" class="spinner">Cargando proyectos...</div>
+            <div id="projects-grid" class="projects-grid hidden"></div>
+            <div id="projects-empty" class="empty-state hidden">
+                <div class="empty-icon">📋</div>
+                <h2>Sin proyectos</h2>
+                <p>Crea tu primer proyecto para comenzar a gestionar tickets</p>
+                <button class="btn btn-primary" onclick="app.navigate('project-form')">Crear Proyecto</button>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-project-form">
+        <div class="container py-4">
+            <div class="page-header">
+                <div>
+                    <a href="#" class="back-link" onclick="app.navigate('projects')">Volver a Proyectos</a>
+                    <h1 class="page-title" id="pform-title">Nuevo Proyecto</h1>
+                </div>
+            </div>
+            <div class="form-card card glass">
+                <div id="pform-error" class="alert alert-danger hidden"></div>
+                <form id="form-project" onsubmit="app.handleProjectSubmit(event)">
+                    <input type="hidden" id="pform-id">
+                    <div class="form-group">
+                        <label class="form-label">Nombre del proyecto <span class="required">*</span></label>
+                        <input type="text" id="pform-nombre" class="form-control" required placeholder="Ej: Sistema de Inventario">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción <span class="required">*</span></label>
+                        <textarea id="pform-descripcion" class="form-control" rows="4" required placeholder="Describe el objetivo..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-ghost" onclick="app.navigate('projects')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btn-pform">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-project-detail">
+        <div class="container py-4">
+            <div id="pdetail-loading" class="spinner">Cargando proyecto...</div>
+            <div id="pdetail-content" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <a href="#" class="back-link" onclick="app.navigate('projects')">Proyectos</a>
+                        <h1 class="page-title" id="pd-nombre">Nombre Proyecto</h1>
+                        <p class="page-subtitle" id="pd-desc">Descripción</p>
+                    </div>
+                    <div class="header-actions" id="pd-actions">
+                        <button class="btn btn-primary" id="btn-ver-tablero">Ver Tablero</button>
+                        <button class="btn btn-outline" id="btn-editar-proyecto">Editar</button>
+                    </div>
+                </div>
+                
+                <div class="detail-grid">
+                    <div class="detail-section card glass">
+                        <h2 class="section-title">Información del Proyecto</h2>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Dueño</span>
+                                <span class="info-value" id="pd-owner"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Fecha de creación</span>
+                                <span class="info-value" id="pd-date"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-section card glass">
+                        <h2 class="section-title">Equipo</h2>
+                        <div id="pd-members" class="members-list"></div>
+                        <div class="add-member-section" id="pd-add-member-section">
+                            <h3 class="subsection-title">Agregar miembro</h3>
+                            <form id="form-add-member" onsubmit="app.handleAddMember(event)" class="inline-form">
+                                <input type="email" id="am-email" list="users-datalist" class="form-control" required placeholder="correo@usuario.com" autocomplete="off">
+                                <datalist id="users-datalist"></datalist>
+                                <button type="submit" class="btn btn-secondary" id="btn-add-member">Agregar</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-ticket-board">
+        <div class="container py-4">
+            <div id="board-loading" class="spinner">Cargando tablero...</div>
+            <div id="board-content" class="hidden">
+                <div class="board-header">
+                    <div>
+                        <a href="#" class="back-link" id="board-back-link">Volver al detalle</a>
+                        <h1 class="page-title">Tablero de Trabajo</h1>
+                    </div>
+                    <button class="btn btn-primary" id="btn-new-ticket">+ Nuevo Ticket</button>
+                </div>
+
+                <div class="kanban-board">
+                    <div class="kanban-column col-pendiente">
+                        <div class="column-header">
+                            <span class="column-indicator" style="background:var(--warning)"></span>
+                            <span class="column-title">Pendiente</span>
+                            <span class="badge badge-count" id="count-pendiente">0</span>
+                        </div>
+                        <div class="column-cards" id="col-pendiente"></div>
+                    </div>
+                    <div class="kanban-column col-en-progreso">
+                        <div class="column-header">
+                            <span class="column-indicator" style="background:var(--info)"></span>
+                            <span class="column-title">En Progreso</span>
+                            <span class="badge badge-count" id="count-en-progreso">0</span>
+                        </div>
+                        <div class="column-cards" id="col-en-progreso"></div>
+                    </div>
+                    <div class="kanban-column col-completado">
+                        <div class="column-header">
+                            <span class="column-indicator" style="background:var(--success)"></span>
+                            <span class="column-title">Completado</span>
+                            <span class="badge badge-count" id="count-completado">0</span>
+                        </div>
+                        <div class="column-cards" id="col-completado"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-ticket-form">
+        <div class="container py-4">
+            <div class="page-header">
+                <div>
+                    <a href="#" class="back-link" id="tform-back-link">Tablero</a>
+                    <h1 class="page-title" id="tform-title">Nuevo Ticket</h1>
+                </div>
+            </div>
+            <div class="form-card card glass">
+                <div id="tform-error" class="alert alert-danger hidden"></div>
+                <form id="form-ticket" onsubmit="app.handleTicketSubmit(event)">
+                    <input type="hidden" id="tform-id">
+                    <div class="form-group">
+                        <label class="form-label">Título <span class="required">*</span></label>
+                        <input type="text" id="tform-titulo" class="form-control" required placeholder="Ej: Error en login">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descripción <span class="required">*</span></label>
+                        <textarea id="tform-descripcion" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Asignar a</label>
+                        <select id="tform-assignee" class="form-control">
+                            <option value="">-- Sin asignar --</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-ghost" id="btn-tform-cancel">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="btn-tform-submit">Guardar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-ticket-detail">
+        <div class="container py-4">
+            <div id="tdetail-loading" class="spinner">Cargando ticket...</div>
+            <div id="tdetail-content" class="hidden">
+                <div class="page-header">
+                    <div>
+                        <a href="#" class="back-link" id="tdetail-back-link">Tablero</a>
+                        <h1 class="page-title">Detalle del Ticket</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-outline" id="btn-tdetail-edit">Editar</button>
+                        <button class="btn btn-danger" id="btn-tdetail-delete">Eliminar</button>
+                    </div>
+                </div>
+
+                <div class="detail-grid">
+                    <div class="detail-main">
+                        <div class="card glass">
+                            <div class="ticket-header">
+                                <span class="ticket-id-badge" id="td-id"></span>
+                                <span class="estado-badge" id="td-estado"></span>
+                            </div>
+                            <h2 class="ticket-title" id="td-titulo"></h2>
+                            <div class="ticket-description">
+                                <p id="td-desc"></p>
+                            </div>
+                            <div class="ticket-meta-grid">
+                                <div class="meta-block">
+                                    <span class="meta-label">Creado por</span>
+                                    <span class="meta-val" id="td-creator"></span>
+                                </div>
+                                <div class="meta-block">
+                                    <span class="meta-label">Asignado a</span>
+                                    <span class="meta-val" id="td-assignee"></span>
+                                </div>
+                                <div class="meta-block">
+                                    <span class="meta-label">Fecha de creación</span>
+                                    <span class="meta-val" id="td-date"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-sidebar">
+                        <div class="card glass sidebar-card">
+                            <h3 class="sidebar-title">Cambiar Estado</h3>
+                            <div id="td-transitions-container"></div>
+                        </div>
+
+                        <div class="card glass sidebar-card">
+                            <h3 class="sidebar-title">Reasignar</h3>
+                            <form id="form-reasignar" onsubmit="app.handleReassign(event)">
+                                <div class="form-group">
+                                    <select id="td-reassign-select" class="form-control">
+                                        <option value="">-- Sin asignar --</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-secondary btn-full">Actualizar asignado</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
