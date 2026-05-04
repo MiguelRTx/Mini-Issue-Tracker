@@ -35,6 +35,18 @@ class ProjectService {
     await http.delete(Uri.parse('$base/$id'), headers: AuthService.headers);
   }
 
+  Future<void> update(int id, String nombre, String descripcion) async {
+    final res = await http.put(
+      Uri.parse('$base/$id'),
+      headers: AuthService.headers,
+      body: jsonEncode({'nombre': nombre, 'descripcion': descripcion}),
+    );
+    if (res.statusCode != 200) {
+      final error = jsonDecode(res.body)['error'] ?? 'Error al actualizar proyecto';
+      throw Exception(error);
+    }
+  }
+
   Future<void> addMember(int projectId, String email) async {
     await http.post(
       Uri.parse('$base/$projectId/members'),
@@ -45,5 +57,17 @@ class ProjectService {
 
   Future<void> removeMember(int projectId, int memberId) async {
     await http.delete(Uri.parse('$base/$projectId/members/$memberId'), headers: AuthService.headers);
+  }
+
+  Future<List<dynamic>> getMembers(int projectId) async {
+    final res = await http.get(Uri.parse('$base/$projectId'), headers: AuthService.headers);
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      final proj = data['project'] as Map<String, dynamic>;
+      // Try both casing variants Sequelize might return
+      final members = proj['Members'] ?? proj['members'] ?? [];
+      return members as List;
+    }
+    return [];
   }
 }

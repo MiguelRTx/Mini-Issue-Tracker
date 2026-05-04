@@ -22,11 +22,15 @@ class TicketService {
   }
 
   Future<void> changeStatus(int projectId, int ticketId, String estado) async {
-    await http.patch(
+    final res = await http.patch(
       Uri.parse('$base/$projectId/tickets/$ticketId/status'),
       headers: AuthService.headers,
       body: jsonEncode({'estado': estado}),
     );
+    if (res.statusCode != 200) {
+      final error = jsonDecode(res.body)['error'] ?? 'Error al cambiar estado';
+      throw Exception(error);
+    }
   }
 
   Future<Ticket> create(int projectId, String titulo, String descripcion, int? assignedTo) async {
@@ -39,6 +43,20 @@ class TicketService {
     );
     if (res.statusCode == 201) return Ticket.fromJson(jsonDecode(res.body)['ticket']);
     throw Exception('Error al crear ticket');
+  }
+
+  Future<void> update(int projectId, int ticketId, String titulo, String descripcion, int? assignedTo) async {
+    final body = <String, dynamic>{'titulo': titulo, 'descripcion': descripcion};
+    if (assignedTo != null) body['assigned_to'] = assignedTo;
+    final res = await http.put(
+      Uri.parse('$base/$projectId/tickets/$ticketId'),
+      headers: AuthService.headers,
+      body: jsonEncode(body),
+    );
+    if (res.statusCode != 200) {
+      final error = jsonDecode(res.body)['error'] ?? 'Error al actualizar ticket';
+      throw Exception(error);
+    }
   }
 
   Future<void> delete(int projectId, int ticketId) async {

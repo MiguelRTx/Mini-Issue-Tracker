@@ -9,6 +9,7 @@ class KanbanColumn extends StatelessWidget {
   final Color indicatorColor;
   final List<Ticket> tickets;
   final Function(int ticketId, String newStatus) onDrop;
+  final Function(Ticket ticket) onTapTicket;
 
   const KanbanColumn({
     super.key,
@@ -17,6 +18,7 @@ class KanbanColumn extends StatelessWidget {
     required this.indicatorColor,
     required this.tickets,
     required this.onDrop,
+    required this.onTapTicket,
   });
 
   @override
@@ -33,7 +35,10 @@ class KanbanColumn extends StatelessWidget {
                 ? AppTheme.primary.withValues(alpha: 0.05)
                 : AppTheme.background,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            border: Border.all(
+              color: candidates.isNotEmpty ? AppTheme.primary : const Color(0xFFE2E8F0),
+              width: candidates.isNotEmpty ? 2 : 1,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -49,7 +54,11 @@ class KanbanColumn extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(title.toUpperCase(), style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: indicatorColor)),
                     ]),
-                    Text('${tickets.length}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: indicatorColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(12)),
+                      child: Text('${tickets.length}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: indicatorColor)),
+                    ),
                   ],
                 ),
               ),
@@ -63,10 +72,13 @@ class KanbanColumn extends StatelessWidget {
                       data: t.id,
                       feedback: SizedBox(
                         width: 280,
-                        child: Material(color: Colors.transparent, child: Opacity(opacity: 0.85, child: TicketCard(ticket: t))),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: Opacity(opacity: 0.85, child: TicketCard(ticket: t, onTap: null)),
+                        ),
                       ),
-                      childWhenDragging: Opacity(opacity: 0.3, child: TicketCard(ticket: t)),
-                      child: TicketCard(ticket: t),
+                      childWhenDragging: Opacity(opacity: 0.3, child: TicketCard(ticket: t, onTap: null)),
+                      child: TicketCard(ticket: t, onTap: () => onTapTicket(t)),
                     );
                   },
                 ),

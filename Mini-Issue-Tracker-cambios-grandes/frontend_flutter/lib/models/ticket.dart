@@ -30,7 +30,7 @@ class Ticket {
       projectId: json['project_id'],
       assigneeId: json['assigned_to'],
       createdAt: DateTime.parse(json['createdAt']),
-      assignee: json['Assignee'] != null ? User.fromJson(json['Assignee']) : null,
+      assignee: json['assignee'] != null ? User.fromJson(json['assignee']) : null,
     );
   }
 

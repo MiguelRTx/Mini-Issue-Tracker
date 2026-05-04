@@ -6,6 +6,7 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/project_card.dart';
 import 'create_project_screen.dart';
 import 'kanban_board_screen.dart';
+import 'project_detail_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {
   final AuthService auth;
@@ -70,7 +71,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
                             onTablero: () => Navigator.push(context, MaterialPageRoute(
                               builder: (_) => KanbanBoardScreen(project: _projects[i], auth: widget.auth),
                             )),
-                            onDetalles: () {},
+                            onDetalles: () async {
+                              await Navigator.push(context, MaterialPageRoute(
+                                builder: (_) => ProjectDetailScreen(project: _projects[i], auth: widget.auth),
+                              ));
+                              _load();
+                            },
                           ),
                         ),
                 ),
